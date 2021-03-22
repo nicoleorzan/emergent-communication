@@ -15,4 +15,9 @@ ag = Agent.DiscAgent(config, env, 0)
 
 num_agents = 2
 sys = System.System(num_agents, config, env)
-sys.learning_step()
+#sys.interaction_step()
+sys.learning_loop(50000)
+
+ags = sys.return_dict_agents()
+
+sys.test_loop(1000)
