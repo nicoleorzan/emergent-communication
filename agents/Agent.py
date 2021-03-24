@@ -1,9 +1,9 @@
 from nltk.corpus import words
-import BaseAgent
+from agents.BaseAgent import BaseAgent
 import numpy as np
 import random
 
-class DiscAgent(BaseAgent.BaseAgent):
+class DiscAgent(BaseAgent):
     
     def __init__(self, config, env, idx):
         super().__init__(config, env)

@@ -1,6 +1,6 @@
-import Agent
-import Config
-import Environments
+from agents.Agent import DiscAgent
+from utils.Config import Config
+from utils.Environments import DiscEnv
 import System
 
 config_dict = {
@@ -8,10 +8,10 @@ config_dict = {
     "lr": 0.1
 }
 
-config = Config.Config(config_dict)
-env = Environments.DiscEnv(num_obs = 3, num_actions = 3)
+config = Config(config_dict)
+env = DiscEnv(num_obs = 3, num_actions = 3)
 
-ag = Agent.DiscAgent(config, env, 0)
+ag = DiscAgent(config, env, 0)
 
 num_agents = 2
 sys = System.System(num_agents, config, env)

@@ -8,7 +8,7 @@ class BaseEnv:
     def get_observation(self):
         pass
 
-    def reward_function(self):
+    def get_reward(self):
         pass
 
 
@@ -21,7 +21,7 @@ class DiscEnv(BaseEnv):
     def get_observation(self):
         return random.choice([i for i in range(self.num_obs)])
 
-    def reward_function(self, obs, act):
+    def get_reward(self, obs, act):
         if (obs == act):
             return 1
         return 0

@@ -1,5 +1,5 @@
 import numpy as np
-import Agent
+from agents.Agent import DiscAgent
 import random
 
 class System:
@@ -16,7 +16,7 @@ class System:
         self.adj_mat = adj_mat
 
     def define_agents(self):
-        self.agents = {i:Agent.DiscAgent(self.config, self.env, i) for i in range(self.num_agents)}
+        self.agents = {i:DiscAgent(self.config, self.env, i) for i in range(self.num_agents)}
 
     def return_dict_agents(self):
         return self.agents
