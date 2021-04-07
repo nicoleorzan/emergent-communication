@@ -11,7 +11,6 @@ class BaseEnv:
     def get_reward(self):
         pass
 
-
 class DiscEnv(BaseEnv):
 
     def __init__(self, num_obs, num_actions):
@@ -19,13 +18,12 @@ class DiscEnv(BaseEnv):
         self.num_obs = num_obs
 
     def get_observation(self):
-        return random.choice([i for i in range(self.num_obs)])
+        return random.randint(0, self.num_obs-1) #random.choice([i for i in range(self.num_obs)])
 
     def get_reward(self, obs, act):
         if (obs == act):
             return 1
         return 0
-
 
 class ContEnv(BaseEnv):
 
@@ -35,3 +33,11 @@ class ContEnv(BaseEnv):
 
     def get_observation(self):
         return random.uniform(self.min, self.max) 
+
+    def get_reward(self, obs, act):
+        if (obs < act):
+            if (act-obs < 1):
+                return 1
+            else:
+                return 0
+        return 0

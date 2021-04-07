@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-class DeepQNetwork(nn.Module):
+class DQN(nn.Module):
     
     def __init__(self, lr, input_dim, num_actions, n_intermed_nodes):
 
-        super(DeepQNetwork, self).__init__()
+        super(DQN, self).__init__()
         self.input_dim = input_dim
         self.num_actions = num_actions
         self.intermed_nodes = n_intermed_nodes

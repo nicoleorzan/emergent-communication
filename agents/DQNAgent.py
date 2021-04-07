@@ -1,10 +1,10 @@
 import torch as t
 import numpy as np
-from networks.DeepQNetwork import DeepQNetwork
+from networks.DQN import DQN
 
 class DQNAgent():
 
-    def __init__(self, input_dim, num_actions, batch_size, lr, eps_start, intermed_nodes = 10, eps_min=0.01, eps_dec=5e-4, capacity=100000):
+    def __init__(self, input_dim, num_actions, batch_size, lr, eps_start, intermed_nodes, eps_min=0.01, eps_dec=5e-5, capacity=100000):
             
         self.lr = lr
         self.input_dim = input_dim
@@ -16,7 +16,7 @@ class DQNAgent():
         self.mem_counter = 0
 
         self.intermed_nodes = intermed_nodes
-        self.Q = DeepQNetwork(self.lr, input_dim = input_dim, num_actions = num_actions, n_intermed_nodes = 3)
+        self.Q = DQN(self.lr, input_dim = input_dim, num_actions = num_actions, n_intermed_nodes = 3)
     
         self.state_memory = np.zeros((self.capacity, self.input_dim), dtype = np.float32)
         self.action_memory = np.zeros((self.capacity, self.input_dim), dtype = np.int64)
@@ -49,7 +49,7 @@ class DQNAgent():
 
     def train(self, idx):
 
-        if (idx < self.batch_size):
+        if (self.mem_counter < self.batch_size):
             return None
 
         self.Q.optimizer.zero_grad()
@@ -58,8 +58,11 @@ class DQNAgent():
         batch = np.random.choice(max_mem, self.batch_size, replace=False)
                 
         state_batch = t.tensor(self.state_memory[batch]).to(self.Q.device)
+        #print("state batch=", state_batch)
         reward_batch = t.tensor(self.reward_memory[batch]).to(self.Q.device)
         action_batch = t.tensor(self.action_memory[batch]).to(self.Q.device)
+        #print("action batch=", action_batch)
+        #print("reward batch=", reward_batch)
 
         Q = self.Q.forward(state_batch).to(self.Q.device).gather(1, action_batch)
         q_target = reward_batch.view(-1,1)

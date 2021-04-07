@@ -7,7 +7,7 @@ class BaseAgent():
         self.lr = config.lr
         self.epsilon = config.epsilon
 
-        self.num_actions = env.num_actions
+        #self.num_actions = env.num_actions
 
         self.rewards = []
 

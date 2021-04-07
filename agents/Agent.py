@@ -1,4 +1,3 @@
-from nltk.corpus import words
 from agents.BaseAgent import BaseAgent
 import numpy as np
 import random
@@ -8,8 +7,7 @@ class DiscAgent(BaseAgent):
     def __init__(self, config, env, idx):
         super().__init__(config, env)
         self.idx = idx
-        #self.dictionary = words.words()[0:words_length]
-        #self.num_messages = len(self.dictionary)
+        self.num_actions = env.num_actions
         self.num_messages = env.num_obs
         self.num_obs = env.num_obs
         self.q_env = np.ones((self.num_obs, self.num_messages))
