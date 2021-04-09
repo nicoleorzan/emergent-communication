@@ -7,9 +7,9 @@ num_act = 3
 input_dim  = 1
 batch_size = 100
 sender = DQNAgent(input_dim=input_dim, num_actions=num_act, batch_size=batch_size, lr=0.01, eps_start=0.99, intermed_nodes=num_act, 
-eps_min=0.01, eps_dec=1e-5, capacity=7000) #5
+eps_min=0.01, eps_dec=5e-5, capacity=7000) #5
 receiver = DQNAgent(input_dim=input_dim, num_actions=num_act, batch_size=batch_size, lr=0.01, eps_start=0.99, intermed_nodes=num_act,
-eps_min=0.01, eps_dec=1e-5, capacity=7000)
+eps_min=0.01, eps_dec=5e-5, capacity=7000)
 env = DiscEnv(num_obs=num_act, num_actions=num_act)
 returns = []
 
