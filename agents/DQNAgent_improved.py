@@ -54,15 +54,14 @@ class DQNAgent_improved():
         #print("non final mask=", non_final_mask)
         try: #sometimes all next states are false
             non_final_next_states = t.tensor([s for s in next_state_batch if s is not None], device=self.Q.device, dtype=t.float).view(-1,1)
-            empty_next_state_values = False
+            #print("non final next:", non_final_next_states)
+            empty_next_state_values = True # cambiato
         except:
             non_final_next_states = None
-            empty_next_state_values = True
+            empty_next_state_values = False # cambiato
 
         #next_state_batch = t.tensor(next_state_batch, device = self.Q.device, dtype = t.float)        
         return state_batch, action_batch, reward_batch, non_final_next_states, non_final_mask, empty_next_state_values
-
-        #return state_batch, action_batch, reward_batch, next_state_batch
 
     def take_action(self, state):
 
@@ -107,10 +106,12 @@ class DQNAgent_improved():
         #print("current q=", current_q_values)
 
         #print("non final next s", non_final_next_states)
+        #print("empty=",empty_next_state_values)
 
         with t.no_grad():
             max_next_q_values = t.zeros(self.batch_size, device=self.Q.device, dtype=t.float).unsqueeze(dim=1)
             if not empty_next_state_values:
+               print("inside")
                max_next_action = self.get_max_next_state_action(non_final_next_states).view(-1, 1)
                #print("max next action=", max_next_action)
                max_next_q_values[non_final_mask] = self.target_Q(non_final_next_states).gather(1, max_next_action)

@@ -23,8 +23,8 @@ class DiscEnv(BaseEnv):
     def get_reward(self, obs, act):
         if (obs == act):
             return 1
-        return 0
-
+        return -10
+"""
 class ContEnv(BaseEnv):
 
     def __init__(self, range, num_actions):
@@ -41,3 +41,4 @@ class ContEnv(BaseEnv):
             else:
                 return 0
         return 0
+"""

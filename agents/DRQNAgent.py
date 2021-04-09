@@ -1,11 +1,11 @@
 import torch as t
 import numpy as np
 from networks.DRQN import DRQN
-from utils.ExperienceReplay import ExperienceReplay
+from utils.ExperienceReplay import RecurrentExperienceReplay
 
 class DRQNAgent():
 
-    def __init__(self, input_dim, num_actions, batch_size, lr, eps_start, intermed_nodes = 10, eps_min=0.01, eps_dec=5e-4, capacity=100000):
+    def __init__(self, input_dim, num_actions, batch_size, lr, eps_start, intermed_nodes = 10, eps_min=0.01, eps_dec=5e-4, capacity=100000, seq_length=10):
             
         self.lr = lr
         self.gamma = 0.99
@@ -22,7 +22,7 @@ class DRQNAgent():
         self.Q = DRQN(self.lr, input_dim = input_dim, num_actions = num_actions, n_layers = 2)
         self.target_Q = DRQN(self.lr, input_dim = input_dim, num_actions = num_actions, n_layers = 2)
     
-        self.memory = ExperienceReplay()
+        self.memory = RecurrentExperienceReplay(10000, seq_length)
 
         self.epsilon = eps_start
         self.eps_min = eps_min
@@ -31,11 +31,15 @@ class DRQNAgent():
         self.target_net_update_freq = 100
         self.update_count = 0
 
+        self.sequence_length = seq_length
+        self.reset_hx()
+        
     def store_transition(self, s, a, r, _s):
         self.memory.push((s, a, r, _s))
 
     def prep_minibatch(self):
         transitions = self.memory.sample(self.batch_size)
+        print("transitions[0]=", transitions)
 
         state_batch, action_batch, reward_batch, next_state_batch = zip(*transitions)
         
@@ -65,13 +69,21 @@ class DRQNAgent():
         #return state_batch, action_batch, reward_batch, next_state_batch
 
     def take_action(self, state):
-
-        if (np.random.random() > self.epsilon):
-            X = t.tensor(np.array([state]), device = self.Q.device, dtype=t.float)
-            action = self.Q(X).argmax()
-            return action
-        else:
-            return np.random.choice(self.action_space)
+        #print("state=", state)
+        with t.no_grad():
+            self.seq.pop(0)
+            self.seq.append(np.array(state))
+            #print("self.seq=", self.seq)
+            if (np.random.random() >= self.epsilon):# or self.static_policy or self.noisy:
+                X = t.tensor([self.seq], device=self.Q.device, dtype=t.float) 
+                #print("X=",X)
+                #self.Q.sample_noise()
+                a = self.Q(X)
+                a = a[:, -1, :] #select last element of seq
+                a = a.max(1)[1]
+                return a.item()
+            else:
+                return np.random.choice(self.action_space)
 
     def get_action_probabilities(self, state):
         X = t.tensor(np.array([state]), device = self.Q.device, dtype=t.float)
@@ -102,8 +114,13 @@ class DRQNAgent():
         # compute loss
 
         batch_state, batch_action, batch_reward, non_final_next_states, non_final_mask, empty_next_state_values = batch_vars
-    
-        current_q_values = self.Q(batch_state).gather(1, batch_action)
+        print("batch state=", batch_state)
+        current_q_values = self.Q(batch_state)
+        print("current q values=", current_q_values)
+        current_q_values = current_q_values.gather(2, batch_action).squeeze()
+        print("gather current q values=", current_q_values)
+
+        #current_q_values = self.Q(batch_state).gather(1, batch_action)
         #print("current q=", current_q_values)
 
         #print("non final next s", non_final_next_states)
@@ -130,3 +147,6 @@ class DRQNAgent():
 
         self.epsilon = self.epsilon - self.eps_dec if self.epsilon > self.eps_min else self.eps_min
         
+    def reset_hx(self):
+        #self.action_hx = self.model.init_hidden(1)
+        self.seq = [np.zeros(self.input_dim) for j in range(self.sequence_length)]

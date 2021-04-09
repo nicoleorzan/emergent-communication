@@ -4,9 +4,10 @@ from networks.DQN import DQN
 
 class DQNAgent():
 
-    def __init__(self, input_dim, num_actions, batch_size, lr, eps_start, intermed_nodes, eps_min=0.01, eps_dec=5e-5, capacity=100000):
+    def __init__(self, input_dim, num_actions, batch_size, lr, eps_start, intermed_nodes = 10, eps_min=0.01, eps_dec=5e-5, capacity=100000):
             
         self.lr = lr
+
         self.input_dim = input_dim
         self.num_actions = num_actions
         self.action_space = [i for i in range(0, self.num_actions)]
