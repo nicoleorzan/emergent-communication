@@ -11,8 +11,8 @@ class DiscAgent():
         self.num_actions = num_actions
         self.num_messages = num_obs
         self.num_obs = num_obs
-        self.q_env = np.ones((self.num_obs, self.num_messages))
-        self.q_act = np.ones((self.num_messages, self.num_actions))
+        self.q_env = np.zeros((self.num_obs, self.num_messages))
+        self.q_act = np.zeros((self.num_messages, self.num_actions))
         
     def argmax(self, values):
 

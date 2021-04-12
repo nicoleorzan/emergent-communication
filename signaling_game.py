@@ -1,22 +1,59 @@
 from games.SignalingGame import SignalingGame
 import matplotlib.pyplot as plt
+import numpy as np
 
-num_agents = 2
-num_obs = 5
+np.random.seed(123)
+
+#num_agents = 2
+num_obs = 3
 words_length = num_obs # can be >= obs_length
+dynamics=True
 
-s = SignalingGame(num_agents=num_agents, num_obs=num_obs, epsilon=0.1, learning_rate=0.9, words_length=words_length)
+s = SignalingGame(words_length=words_length, learning_rate=0.1, epsilon=0.05,
+ epsilon_step=0.1, dynamics=dynamics, agents_fixed=True, game_cooperative=False)
+num_agents = s.num_agents
 
-s.train(1000)
-s.test_loop(100)
-s.print_matrices(0)
+time = 10000
+s.train(time)
 
-agents = s.dict_agents
+agents = [s.sender, s.receiver]
+if (dynamics):
+
+    s_dynamics = s.sender_states_t
+
+    fig, ax = plt.subplots(num_obs, num_obs, figsize=(4*num_obs,2*num_obs), sharex=True, sharey=True, gridspec_kw={'wspace':0.1, 'hspace': 0.2})
+    fig.suptitle('Sender Dynamics', y=0.9, fontsize=15)
+        
+    for i in range(num_obs):
+        for j in range(num_obs):
+            ax[i,j].plot(s_dynamics[i,j,:])
+
+            ax[i,j].set_xlabel("Obs="+str(i), fontsize=13)
+            ax[i,j].set_ylabel("Mex="+str(j), fontsize=13)
+            ax[i,j].grid()
+
+
+    s_dynamics = s.receiver_states_t
+
+    fig, ax = plt.subplots(num_obs, num_obs, figsize=(4*num_obs,2*num_obs), sharex=True, sharey=True, gridspec_kw={'wspace':0.1, 'hspace': 0.2})
+    fig.suptitle('Receiver Dynamics', y=0.9, fontsize=15)
+        
+    for i in range(num_obs):
+        for j in range(num_obs):
+            ax[i,j].plot(s_dynamics[i,j,:])
+
+            ax[i,j].set_xlabel("Mex="+str(i), fontsize=13)
+            ax[i,j].set_ylabel("Act="+str(j), fontsize=13)
+            ax[i,j].grid()
+        
+    plt.show()
+
+
 
 
 fig, ax = plt.subplots(num_agents, figsize=(2*num_obs,3.5*num_agents), sharex=True, sharey=True, gridspec_kw={'hspace': 0.02})
 fig.suptitle('Sender Matrices', y=0.9, fontsize=15)
-ax[0].set_ylim(-0.01,1.01)
+#ax[0].set_ylim(-0.01,1.01)
 
 for j in range(num_agents):
     
@@ -34,7 +71,7 @@ plt.show()
 
 fig, ax = plt.subplots(num_agents, figsize=(2*num_obs,3.5*num_agents), sharex=True, sharey=True, gridspec_kw={'hspace': 0.02})
 fig.suptitle('Receiver Matrices', y=0.9, fontsize=15)
-ax[0].set_ylim(-0.01,1.01)
+#ax[0].set_ylim(-0.01,1.01)
 
 for j in range(num_agents):
     

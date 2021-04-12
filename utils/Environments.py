@@ -24,6 +24,49 @@ class DiscEnv(BaseEnv):
         if (obs == act):
             return 1
         return -10
+
+class RockPaperScissor():
+
+    def __init__(self):
+        self.num_obs = 3
+        self.num_actions = 3
+
+    def get_observation(self):
+        return random.randint(0, self.num_obs-1)
+
+    def get_reward(self, obs, act): #0=rock, 1=paper, 2=scissot
+        sender_rew = 0
+        receiver_rew = 0
+
+        sott = act - obs
+        if (sott == 1 or sott == -2):
+            sender_rew = -1
+            receiver_rew = 1
+        elif (sott == -1 or sott == 2): # rock, paper, scissor
+            sender_rew = 1
+            receiver_rew = -1
+
+        return sender_rew, receiver_rew
+        
+class CoordinationGame():
+
+    def __init__(self):
+        self.num_obs = 3
+        self.num_actions = 3
+
+    def get_observation(self):
+        return random.randint(0, self.num_obs-1)
+
+    def get_reward(self, obs, act):
+        sender_rew = -1
+        receiver_rew = -1
+
+        if (obs == act):
+            sender_rew = 1
+            receiver_rew = 1        
+
+        return sender_rew, receiver_rew
+
 """
 class ContEnv(BaseEnv):
 
