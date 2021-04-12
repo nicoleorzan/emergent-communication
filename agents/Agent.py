@@ -1,15 +1,16 @@
-from agents.BaseAgent import BaseAgent
+#from agents.BaseAgent import BaseAgent
 import numpy as np
 import random
 
-class DiscAgent(BaseAgent):
+class DiscAgent():
     
-    def __init__(self, config, env, idx):
-        super().__init__(config, env)
+    def __init__(self, num_obs, num_actions, epsilon, lr, idx):
+        self.epsilon = epsilon
+        self.lr = lr
         self.idx = idx
-        self.num_actions = env.num_actions
-        self.num_messages = env.num_obs
-        self.num_obs = env.num_obs
+        self.num_actions = num_actions
+        self.num_messages = num_obs
+        self.num_obs = num_obs
         self.q_env = np.ones((self.num_obs, self.num_messages))
         self.q_act = np.ones((self.num_messages, self.num_actions))
         
@@ -33,7 +34,7 @@ class DiscAgent(BaseAgent):
         else:
             return random.choice([i for i in range(self.num_messages)])
     
-    def perform_action(self, message):
+    def take_action(self, message):
         
         if (random.uniform(0, 1) < self.epsilon):
             return self.argmax(self.q_act[message])
