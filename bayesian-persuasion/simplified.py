@@ -5,21 +5,31 @@ import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
-def get_reward_and_loss(truth, pred): # works. Not using REINFORCE here
+def get_loss(truth, pred): # works. Not using REINFORCE here
     return torch.mean(torch.abs(truth - pred.squeeze()))
 
 def get_reward_only(truth, sampled):
     rew = -torch.abs(truth - sampled.squeeze()).detach()
     return rew
 
+def new_trial(truth, sampled, logprobs):
+    rew = torch.abs(truth - sampled.squeeze()) #.detach()
+    #print("rew=", rew.shape)
+    #print("logprobs=", logprobs.shape)
+    loss = (rew * logprobs.squeeze()).mean()
+    #print("loss1=", loss1)
+    #loss = torch.abs(loss1).mean() #( rew * torch.mean(logprobs) ).mean()
+    return loss
+
+
 np.random.seed(123)
 lr = 0.02 # 0.01, 0.02 oppure 0.03 con drop rate 0.1
 drop_rate = 0.0
-batch_size = 512*2
+batch_size = 64 #512*2
 write = False
 prior = 0.7 # probability of being innocent
 probbs = [prior, 1-prior]
-num_episodes = 1000
+num_episodes = 2000
 
 print("Parameters: lr=", lr, ", drop_rate=", drop_rate)
 
@@ -43,12 +53,13 @@ for ep in range(num_episodes):
     truth_batch = torch.nn.functional.one_hot(indices, 2).float()
     truth_values = torch.Tensor([probbs[idx] for idx in idxs])
     pred, var, sampled, logprobs = send.model.forward(truth_batch)
+
+    loss = new_trial(truth_values, sampled, logprobs)
     
-    rew = get_reward_only(truth_values, pred) # kind of works
-    loss = send.lossfunc(rew, logprobs)
+    #rew = get_reward_only(truth_values, pred) # kind of works
+    #loss = send.lossfunc(rew, logprobs)
     
-    #loss = get_reward_and_loss(truth_values, sampled) # works
-    #print(truth_batch == truth_values)
+    #loss = get_loss(truth_values, sampled) # works
 
     #print("truth batch=", truth_batch, "truth values=", truth_values, "\npred=", pred, "\nlogprobs=", logprobs, "\nrew=", rew, "\nloss=", loss, "\n")
 
