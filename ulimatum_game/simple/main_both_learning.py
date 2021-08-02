@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from simpleagents import Sender, Receiver
+from agents import Sender, Receiver
 import pandas as pd
 import seaborn as sns
 
