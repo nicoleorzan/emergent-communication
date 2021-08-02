@@ -38,5 +38,5 @@ class DRQN(nn.Module):
         #out = out.reshape(out.shape[0], -1)
         #print("out reshape=", out)
         out = self.fc(out)
-        #print("final=", out)
+        print("final=", out)
         return out

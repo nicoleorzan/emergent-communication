@@ -1,27 +1,23 @@
 import numpy as np
 import random
-from agents.Agent import DiscAgent
-from utils.Environments import RockPaperScissor, CoordinationGame
+import copy
+from agents.Agent import Agent
 
 class SignalingGame():
     
-    def __init__(self, words_length, learning_rate, epsilon, epsilon_step=0.05, dynamics=False, agents_fixed=False, game_cooperative=False):
+    def __init__(self, game, words_length, learning_rate, epsilon, epsilon_step=0.05, T = 1, dynamics=False, agents_fixed=False):
         self.num_agents = 2
         self.dict_agents = {}
         self.dynamics = dynamics
         self.agents_fixed = agents_fixed
-        self.game_cooperative = game_cooperative
 
-        if (self.game_cooperative):
-            self.env = CoordinationGame()
-        else:
-            self.env = RockPaperScissor()
+        self.env = game
+
+        self.T = T
 
         self.num_obs = self.env.num_obs
+        self.num_messages = self.num_obs
         self.num_actions = self.num_obs
-
-        #assert(self.num_obs == 3)
-        #assert(self.num_actions == 3)
 
         self.epsilon = epsilon
         self.epsilon_step = epsilon_step
@@ -33,9 +29,15 @@ class SignalingGame():
         
         self.create_system()
 
+    def init_policies(self, x0, y0):
+        assert(np.sum(x0) == 1.)
+        assert(np.sum(y0) == 1.)
+        self.dict_agents[0].init_policy(x0)
+        self.dict_agents[1].init_policy(y0)
+
     def create_system(self):
-        for i in range(self.num_actions):
-            self.dict_agents[i] = DiscAgent(self.num_obs, self.num_actions, self.epsilon, self.learning_rate, 0)
+        for i in range(self.num_agents):
+            self.dict_agents[i] = Agent(self.num_obs, self.num_messages, self.num_actions, self.epsilon, self.learning_rate, i, self.T)
             
     def train_step(self):
 
@@ -47,15 +49,21 @@ class SignalingGame():
 
         obs = self.env.get_observation()
         
-        mex = self.sender.generate_message(obs)
-        action = self.receiver.take_action(mex)
-        
+        #mex = self.sender.epsilon_greedy_action(obs, sender=True)
+        #action = self.receiver.epsilon_greedy_action(mex, sender=False)
+
+        mex = self.sender.softmax_action(obs, sender=True)
+        action = self.receiver.softmax_action(mex, sender=False)
+
         rew_s, rew_r = self.env.get_reward(obs, action)
+
+        self.sender.returns.append(rew_s)
+        self.receiver.returns.append(rew_r)
         
         self.sender.update_q_sender(rew_s, obs, mex)
         self.receiver.update_q_receiver(rew_r, mex, action)
 
-    def update_data(self, t):
+    def save_data(self, t):
         self.sender_states_t[:,:,int(t/self.save_step)] = self.sender.q_env
         self.receiver_states_t[:,:,int(t/self.save_step)] = self.receiver.q_act
         
@@ -63,6 +71,15 @@ class SignalingGame():
 
         i = 0
         j = 0
+
+        self.pi_sender_t = np.zeros((num_loops, self.num_obs, self.num_actions))
+        self.pi_receiver_t = np.zeros((num_loops, self.num_obs, self.num_actions))
+
+        self.pi_sender_t[0,:,:] = self.dict_agents[0].pi[:,:]
+        self.pi_receiver_t[0,:,:] = self.dict_agents[1].pi[:,:]
+
+        self.entropy_sender_t = np.zeros((num_loops, self.num_obs))
+        self.entropy_receiver_t = np.zeros((num_loops, self.num_obs))
 
         if (self.agents_fixed):
             self.sender = self.dict_agents[0]
@@ -83,16 +100,33 @@ class SignalingGame():
                 if (self.epsilon > 1):
                     self.epsilon = 1
                 print("epsilon = ", self.epsilon)
-                for idx_ag in self.dict_agents:
-                    self.dict_agents[idx_ag].epsilon = self.epsilon
+                print("i= ", i)
+
+            for idx_ag in self.dict_agents:
+                self.dict_agents[idx_ag].epsilon = self.epsilon
             
-            # learning step
             self.train_step()
 
             if (self.dynamics and i%self.save_step==0):
-                self.update_data(i)
+                self.save_data(i)
+
+            self.pi_sender_t[i,:,:] = copy.deepcopy(self.dict_agents[0].pi[:,:])
+            self.pi_receiver_t[i,:,:] = copy.deepcopy(self.dict_agents[1].pi[:,:])                            
+            send_ent = [self.sender.compute_entropy(i) for i in range(self.num_obs)]
+            rec_ent = [self.receiver.compute_entropy(i) for i in range(self.num_obs)]
+            
+            self.entropy_sender_t[i, :] = send_ent
+            self.entropy_receiver_t[i, :] = rec_ent
             
             i += 1
+
+        sender_entropy = [self.sender.compute_entropy(i) for i in range(self.num_obs)]
+        print("sender_entropy", sender_entropy)
+        receiver_entropy = [self.receiver.compute_entropy(i) for i in range(self.num_obs)]
+        print("receiver_entropy", receiver_entropy)
+
+        print("final policy sender =\n", self.sender.pi)
+        print("final policy receiver =\n", self.receiver.pi)
             
     def print_matrices(self, idx_agent):
 
